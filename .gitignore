@@ -1,0 +1,4 @@
+# 若在本目录放 .env，请勿提交；OpenClaw 实际读取的是 %USERPROFILE%\.openclaw\.env
+.env
+.env.*
+!.env.example
