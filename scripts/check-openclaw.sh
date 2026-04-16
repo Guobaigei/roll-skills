@@ -80,7 +80,7 @@ check_command "npm"
 
 openclaw_path="$(command_path openclaw)"
 if [[ -z "$openclaw_path" ]]; then
-  add_check "openclaw" "ERROR" "CLI not found; install via install.sh first"
+  add_check "openclaw" "ERROR" "CLI not found; install via npm workflow first"
 else
   openclaw_version="$(capture "$openclaw_path" --version)"
   openclaw_exit="${openclaw_version##*$'\n'}"

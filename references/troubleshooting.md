@@ -2,8 +2,8 @@
 
 本文件用于处理以下两类问题：
 
-- macOS / WSL2 安装完成后仍无法正常工作
-- 已经存在的原生 Windows 安装卡住了
+- macOS npm 安装后仍无法正常工作
+- Windows npm 安装后仍无法正常工作
 
 ## 先做这三步
 
@@ -15,11 +15,28 @@ openclaw health --verbose
 openclaw dashboard --no-open
 ```
 
-如果是 macOS 或 WSL2，优先再跑：
+如果是 macOS，优先再跑：
 
 ```bash
 bash <skill-dir>/scripts/check-openclaw.sh
 ```
+
+如果是 Windows，优先再跑：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\check-openclaw.ps1
+```
+
+## 配置脚本报缺变量
+
+默认要求 `.env` 至少包含：
+
+- `QWEN_API_KEY`，或 `MODELSTUDIO_API_KEY` / `DASHSCOPE_API_KEY`
+- `DEEPSEEK_API_KEY`
+- `FEISHU_APP_ID`
+- `FEISHU_APP_SECRET`
+
+缺任何一个，安装脚本都不应该继续往下跑。
 
 ## `openclaw.ps1` 无法加载
 
@@ -35,9 +52,7 @@ bash <skill-dir>/scripts/check-openclaw.sh
 如果想长期可用，可以在 PowerShell profile 里加：
 
 ```powershell
-function Global:openclaw {
-  & (Join-Path $env:APPDATA 'npm\openclaw.cmd') @args
-}
+function Global:openclaw { & (Join-Path $env:APPDATA 'npm\openclaw.cmd') @args }
 ```
 
 不要默认让用户全局放宽执行策略。
@@ -46,19 +61,30 @@ function Global:openclaw {
 
 先检查：
 
-```powershell
+```bash
 node --version
-npm prefix -g
-where.exe openclaw
+npm --version
+openclaw --version
 ```
 
-如果这是遗留原生 Windows 安装，且用户不执着于 npm 方式，最快修复通常是官方安装脚本：
+如果 `node` 不存在，先装 Node：
+
+macOS：
+
+```bash
+brew install node@24
+brew link --overwrite --force node@24
+```
+
+Windows：
 
 ```powershell
-& ([scriptblock]::Create((iwr -useb https://openclaw.ai/install.ps1))) -NoOnboard
+winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 ```
 
-## macOS / WSL2：dashboard 打不开
+然后重新执行安装脚本。
+
+## dashboard 打不开
 
 按这个顺序检查：
 
@@ -77,9 +103,7 @@ curl -I http://127.0.0.1:18789/
 - `curl` 失败但 Gateway 是 running：多半是本地代理、浏览器插件或 bind 问题
 - `dashboard --no-open` 能打印 URL 但浏览器打不开：先用无插件或干净 profile 试
 
-如果这是 macOS 本机环境，再检查系统代理或浏览器代理插件；如果这是 WSL2，优先确认你访问的是 WSL 内实际打印出来的 dashboard 地址。
-
-如果是遗留原生 Windows 环境，再检查：
+如果是 Windows，再检查：
 
 ```powershell
 reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable
@@ -89,40 +113,11 @@ reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v 
 
 确保 `localhost` / `127.0.0.1` 直连。
 
-## WSL2：`gateway install` 装不上
+## Windows：`gateway install` / `schtasks` 拒绝访问
 
-最常见原因是 `systemd` 没开。
+说明当前 PowerShell 不是管理员，或公司策略禁止计划任务。
 
-先检查：
-
-```bash
-systemctl --user status
-```
-
-如果提示 systemd 不可用，就执行：
-
-```powershell
-wsl --shutdown
-```
-
-然后重新进入 Ubuntu，确认 `/etc/wsl.conf` 里已有：
-
-```ini
-[boot]
-systemd=true
-```
-
-再执行：
-
-```bash
-openclaw onboard --install-daemon
-```
-
-## 原生 Windows：`gateway install` / `schtasks` 拒绝访问
-
-这是遗留原生 Windows 路径的问题，不是新的推荐安装方式。
-
-先在管理员 PowerShell 里重试：
+先在管理员 PowerShell 里重新执行安装脚本；如果只想补装 Gateway，可重试：
 
 ```powershell
 openclaw gateway install
@@ -156,7 +151,7 @@ openclaw devices approve <requestId>
 
 先检查：
 
-```powershell
+```bash
 openclaw gateway status
 openclaw logs --follow
 openclaw channels status --probe
@@ -181,19 +176,19 @@ openclaw pairing approve feishu <CODE>
 
 先看当前可用模型：
 
-```powershell
+```bash
 openclaw models list --provider qwen
 openclaw models status --plain
+openclaw models fallbacks list --plain
 ```
 
-`qwen/qwen3.6-plus` 推荐重新走 Standard API key 流程：
+如果主模型或备选模型没有写进去，重新执行安装脚本；如果只想补配置，也可以直接跑：
 
-```powershell
-openclaw onboard --auth-choice qwen-standard-api-key
-openclaw models set qwen/qwen3.6-plus
+```bash
+node <skill-dir>/scripts/apply-openclaw-config.mjs --env-file <env-file>
 ```
 
-不要继续沿用旧的 Qwen OAuth / 控制台说明。
+不要再回退到交互式 provider 向导。
 
 ## Shell 里能用 API Key，但 Gateway 里不生效
 
@@ -202,12 +197,12 @@ openclaw models set qwen/qwen3.6-plus
 把密钥放到：
 
 ```text
-%USERPROFILE%\.openclaw\.env
+~/.openclaw/.env
 ```
 
 然后重新检查：
 
-```powershell
+```bash
 openclaw config validate
 openclaw gateway status
 openclaw health --verbose

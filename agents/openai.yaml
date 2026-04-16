@@ -1,7 +1,7 @@
 interface:
   display_name: "OpenClaw 安装"
-  short_description: "在 macOS / Windows 上安装并排障 OpenClaw。"
-  default_prompt: "使用 $openclaw-install 帮我在 macOS 或 Windows 上安装或排查 OpenClaw。"
+  short_description: "Node + npm 安装 OpenClaw；Windows 走原生 PowerShell。"
+  default_prompt: "使用 $openclaw-install 帮我在 macOS 或 Windows 上用 npm 安装 OpenClaw，Windows 走原生 PowerShell，并直接配置飞书和默认模型。"
 
 policy:
   allow_implicit_invocation: true

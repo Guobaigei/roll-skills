@@ -2,7 +2,7 @@
 
 只在以下情况读取本文件：
 
-- `openclaw onboard` / `openclaw channels add` 不够用
+- 安装脚本已跑完，但你还想确认它到底写了什么
 - 用户明确要求手动改配置文件
 - 需要给出最小可复制片段
 
@@ -23,20 +23,16 @@ OpenClaw 支持在配置字符串中引用环境变量：
 
 ## DeepSeek
 
-推荐命令：
-
-```powershell
-openclaw onboard --auth-choice deepseek-api-key
-openclaw models set deepseek/deepseek-reasoner
-```
-
-如果需要把默认模型显式写进配置：
+安装脚本会把 DeepSeek 作为备选模型写入：
 
 ```json5
 {
   agents: {
     defaults: {
-      model: { primary: "deepseek/deepseek-reasoner" },
+      model: {
+        primary: "qwen/qwen3.6-plus",
+        fallbacks: ["deepseek/deepseek-reasoner"],
+      },
     },
   },
 }
@@ -44,23 +40,16 @@ openclaw models set deepseek/deepseek-reasoner
 
 ## Qwen
 
-默认优先使用内置 `qwen` provider，不手写 `models.providers.qwen`。
-
-`qwen/qwen3.6-plus` 推荐命令：
-
-```powershell
-openclaw onboard --auth-choice qwen-standard-api-key
-openclaw models set qwen/qwen3.6-plus
-openclaw models list --provider qwen
-```
-
-如果需要把默认模型显式写进配置：
+安装脚本会直接把 Qwen 设为主模型：
 
 ```json5
 {
   agents: {
     defaults: {
-      model: { primary: "qwen/qwen3.6-plus" },
+      model: {
+        primary: "qwen/qwen3.6-plus",
+        fallbacks: ["deepseek/deepseek-reasoner"],
+      },
     },
   },
 }
@@ -70,19 +59,11 @@ openclaw models list --provider qwen
 
 - 优先使用 `QWEN_API_KEY`
 - 兼容别名还包括 `MODELSTUDIO_API_KEY` 和 `DASHSCOPE_API_KEY`
-- `qwen/qwen3.6-plus` 最适合走 Standard DashScope endpoint 流程
+- 安装脚本不会再走交互式 provider 向导，而是直接设置默认模型
 
 ## 飞书
 
-推荐命令：
-
-```powershell
-openclaw channels add
-```
-
-按提示选择 Feishu，并填写 App ID / App Secret。
-
-标准配置结构：
+安装脚本会直接写入下面这组配置：
 
 ```json5
 {
@@ -99,20 +80,6 @@ openclaw channels add
           name: "My AI assistant",
         },
       },
-    },
-  },
-}
-```
-
-如果要走 webhook，还需要这些字段：
-
-```json5
-{
-  channels: {
-    feishu: {
-      connectionMode: "webhook",
-      verificationToken: "${FEISHU_VERIFICATION_TOKEN}",
-      encryptKey: "${FEISHU_ENCRYPT_KEY}",
     },
   },
 }
@@ -138,7 +105,7 @@ openclaw channels add
 
 改完配置后执行：
 
-```powershell
+```bash
 openclaw config validate
 openclaw gateway status
 openclaw dashboard --no-open

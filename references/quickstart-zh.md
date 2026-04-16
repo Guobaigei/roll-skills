@@ -4,13 +4,12 @@
 
 ## macOS
 
-复制执行：
+前提：`.env` 已经配好。
+
+直接执行：
 
 ```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
-openclaw gateway status
-openclaw dashboard
+bash <skill-dir>/scripts/install-openclaw-macos.sh <env-file>
 ```
 
 装完后的判断标准：
@@ -20,36 +19,14 @@ openclaw dashboard
 
 ## Windows
 
-Windows 从零安装时，统一走 WSL2。
+前提：`.env` 已经配好，并且要在管理员 PowerShell 中执行。
 
-先在管理员 PowerShell 执行：
+说明：Windows 这里固定走原生安装，不走 WSL2 / Ubuntu。
 
-```powershell
-wsl --install -d Ubuntu
-```
-
-如果系统提示重启，就先重启。然后打开 Ubuntu，执行：
+直接执行：
 
 ```bash
-sudo tee /etc/wsl.conf >/dev/null <<'EOF'
-[boot]
-systemd=true
-EOF
-```
-
-回到 PowerShell 执行：
-
-```powershell
-wsl --shutdown
-```
-
-重新打开 Ubuntu，继续执行：
-
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
-openclaw gateway status
-openclaw dashboard
+powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\install-openclaw-windows.ps1 -EnvFile <env-file>
 ```
 
 装完后的判断标准：
@@ -59,4 +36,10 @@ openclaw dashboard
 
 ## 后续接 Qwen / DeepSeek / 飞书
 
-装好以后，如果还要接模型或飞书，再看 `references/config-snippets.md`。
+安装脚本已经会直接写好：
+
+- 默认模型：`qwen/qwen3.6-plus`
+- 备选模型：`deepseek/deepseek-reasoner`
+- 飞书：`websocket`
+
+如果还要看配置细节，再看 `references/config-snippets.md`。
