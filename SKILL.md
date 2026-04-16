@@ -12,7 +12,7 @@ description: 引导用户在 macOS 或 Windows 上安装和配置 OpenClaw。统
 - OpenClaw 统一用 `npm install -g openclaw@latest` 安装。
 - Windows 固定走原生管理员 PowerShell，不引导用户安装 WSL2 / Ubuntu。
 - 安装前先检查 Git、Node、npm；缺什么先补什么。
-- `.env` 必须准备好，再配置模型和飞书。
+- `.env` 必须在安装前准备好；这是必填清单，不是可选后置步骤。
 - 默认模型使用 `qwen/qwen3.6-plus`，备选模型使用 `deepseek/deepseek-reasoner`。
 - 不要让用户把真实密钥发到聊天里，只指导他把密钥写进本机 `.env`。
 
@@ -29,7 +29,45 @@ description: 引导用户在 macOS 或 Windows 上安装和配置 OpenClaw。统
 - Git / Node / npm 环境没装好
 - `.env` 缺少 Qwen、DeepSeek 或飞书配置
 
-## 1. 先检查依赖
+## 1. 先准备必填配置
+
+先让用户根据 `.env.example` 准备环境变量。必须在安装前准备好：
+
+```env
+QWEN_API_KEY=你的QwenKey
+DEEPSEEK_API_KEY=你的DeepSeekKey
+FEISHU_APP_ID=你的飞书AppID
+FEISHU_APP_SECRET=你的飞书AppSecret
+FEISHU_BOT_NAME=OpenClaw
+FEISHU_DOMAIN=feishu
+```
+
+用途：
+
+- `QWEN_API_KEY`：默认模型 `qwen/qwen3.6-plus` 使用。
+- `DEEPSEEK_API_KEY`：备选模型 `deepseek/deepseek-reasoner` 使用。
+- `FEISHU_APP_ID`：飞书机器人应用 ID，用于飞书接入。
+- `FEISHU_APP_SECRET`：飞书机器人应用密钥，用于飞书接入。
+- `FEISHU_BOT_NAME`：OpenClaw 里显示的飞书账号名称。
+- `FEISHU_DOMAIN`：大陆飞书填 `feishu`，国际版 Lark 填 `lark`。
+
+不要让用户把真实值发到聊天里，只让他写进本机文件。
+
+macOS：
+
+```bash
+mkdir -p ~/.openclaw
+nano ~/.openclaw/.env
+```
+
+Windows PowerShell：
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.openclaw"
+notepad "$env:USERPROFILE\.openclaw\.env"
+```
+
+## 2. 检查依赖
 
 先让用户执行：
 
@@ -92,7 +130,7 @@ winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agr
 
 安装 Git 或 Node 后，提醒用户重新打开终端 / 管理员 PowerShell，再继续下一步。
 
-## 2. 安装 OpenClaw
+## 3. 安装 OpenClaw
 
 macOS / Windows 都使用 npm：
 
@@ -106,37 +144,6 @@ Windows 如果遇到 `openclaw.ps1` 被 PowerShell 拦截，改用：
 ```powershell
 & "$env:APPDATA\npm\openclaw.cmd" --version
 ```
-
-## 3. 准备 `.env`
-
-让用户在本机创建 OpenClaw 环境变量文件。
-
-macOS：
-
-```bash
-mkdir -p ~/.openclaw
-nano ~/.openclaw/.env
-```
-
-Windows PowerShell：
-
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.openclaw"
-notepad "$env:USERPROFILE\.openclaw\.env"
-```
-
-`.env` 至少包含：
-
-```env
-QWEN_API_KEY=你的QwenKey
-DEEPSEEK_API_KEY=你的DeepSeekKey
-FEISHU_APP_ID=你的飞书AppID
-FEISHU_APP_SECRET=你的飞书AppSecret
-FEISHU_BOT_NAME=OpenClaw
-FEISHU_DOMAIN=feishu
-```
-
-Qwen key 也兼容 `MODELSTUDIO_API_KEY` 或 `DASHSCOPE_API_KEY`。如果是国际版 Lark，把 `FEISHU_DOMAIN` 改成 `lark`。
 
 ## 4. 配置模型
 
