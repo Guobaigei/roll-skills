@@ -1,7 +1,7 @@
 interface:
-  display_name: "OpenClaw 安装"
-  short_description: "引导用户用 npm 安装并配置 OpenClaw。"
-  default_prompt: "使用 $openclaw-install 引导我在 macOS 或 Windows 上安装 OpenClaw，并配置 Qwen、DeepSeek 和飞书。"
+  display_name: "OpenClaw 飞书"
+  short_description: "引导用户安装 OpenClaw 并接入飞书。"
+  default_prompt: "使用 $openclaw-feishu 引导我在 macOS 或 Windows 上安装 OpenClaw，并配置 Qwen、DeepSeek 和飞书。"
 
 policy:
   allow_implicit_invocation: true

@@ -1,9 +1,9 @@
 ---
-name: openclaw-install
-description: 引导用户在 macOS 或 Windows 上安装和配置 OpenClaw。统一使用 Node + npm 安装；Windows 走原生管理员 PowerShell，不走 WSL2 / Ubuntu。重点告诉用户如何补齐 Git、Node、npm、.env、Qwen、DeepSeek 和飞书配置。用户提到 OpenClaw 安装、配置模型、配置飞书、dashboard、Gateway、Git、Node、npm 时使用。
+name: openclaw-feishu
+description: 引导用户在 macOS 或 Windows 上安装 OpenClaw 并接入飞书。统一使用 Node + npm 安装；Windows 走原生管理员 PowerShell，不走 WSL2 / Ubuntu。重点告诉用户如何补齐 Git、Node、npm、.env、Qwen、DeepSeek 和飞书配置。用户提到 OpenClaw 安装、飞书接入、配置模型、dashboard、Gateway、Git、Node、npm 时使用。
 ---
 
-# OpenClaw 安装
+# OpenClaw 飞书接入
 
 这个 skill 用来引导用户安装 OpenClaw，不负责维护一键安装脚本。回答时要简洁，优先给用户可复制命令，并解释缺什么该怎么补。
 
@@ -108,6 +108,17 @@ Windows：
 winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
 ```
 
+如果 `winget`、Git 官网或 GitHub 下载不通，给用户国内镜像兜底：
+
+- USTC GitHub Release 镜像：https://mirrors.ustc.edu.cn/github-release/git-for-windows/git/
+- npmmirror 二进制镜像：https://registry.npmmirror.com/binary.html?path=git-for-windows%2F
+
+引导用户在镜像页面下载最新的 `Git-*-64-bit.exe`，双击安装，安装选项保持默认即可。安装完成后必须重新打开 PowerShell，再执行：
+
+```powershell
+git --version
+```
+
 如果缺 Node / npm：
 
 macOS：
@@ -123,10 +134,23 @@ Windows：
 winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 ```
 
+如果 Node 官网下载不通，给用户国内镜像兜底：
+
+- npmmirror Node 镜像：https://registry.npmmirror.com/binary.html?path=node/
+
+引导用户下载最新 LTS 或 Node 24 的 Windows `.msi` 安装包，安装完成后重新打开 PowerShell，再执行：
+
+```powershell
+node --version
+npm --version
+```
+
 如果 Windows 没有 `winget`，让用户手动下载并安装：
 
 - Git: https://git-scm.com/download/win
+- Git 国内镜像: https://mirrors.ustc.edu.cn/github-release/git-for-windows/git/
 - Node.js: https://nodejs.org/en/download
+- Node.js 国内镜像: https://registry.npmmirror.com/binary.html?path=node/
 
 安装 Git 或 Node 后，提醒用户重新打开终端 / 管理员 PowerShell，再继续下一步。
 
