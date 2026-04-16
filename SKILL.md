@@ -1,21 +1,20 @@
 ---
 name: openclaw-install
-description: 在 macOS 或 Windows 上安装和排障 OpenClaw。统一走 Node + npm 安装；如果没有 Node，先安装 Node，再执行 npm 全局安装。Windows 固定走原生管理员 PowerShell 安装，不走 WSL2 / Ubuntu。若 `.env` 已配置，直接用脚本写入飞书和模型配置，默认模型为 `qwen/qwen3.6-plus`，备选为 `deepseek/deepseek-reasoner`。用户提到 OpenClaw 安装、Node、npm、Gateway、dashboard、Feishu、Qwen、DeepSeek、pairing required 时使用。
+description: 引导用户在 macOS 或 Windows 上安装和配置 OpenClaw。统一使用 Node + npm 安装；Windows 走原生管理员 PowerShell，不走 WSL2 / Ubuntu。重点告诉用户如何补齐 Git、Node、npm、.env、Qwen、DeepSeek 和飞书配置。用户提到 OpenClaw 安装、配置模型、配置飞书、dashboard、Gateway、Git、Node、npm 时使用。
 ---
 
 # OpenClaw 安装
 
-这个 skill 用于在 macOS / Windows 上安装、初始化和排障 OpenClaw。
+这个 skill 用来引导用户安装 OpenClaw，不负责维护一键安装脚本。回答时要简洁，优先给用户可复制命令，并解释缺什么该怎么补。
 
 ## 默认原则
 
-- 两个系统统一走 `npm install -g openclaw@latest`。
-- 如果没有 Node，先安装 Node，再继续 npm 安装。
-- Windows 固定走原生管理员 PowerShell，不走 WSL2 / Ubuntu。
-- `.env` 已经准备好的情况下，不再让用户手动点选 wizard；直接运行配置脚本，把飞书和模型写好。
-- 默认模型固定为 `qwen/qwen3.6-plus`。
-- 备选模型固定为 `deepseek/deepseek-reasoner`。
-- 回复时优先给“一条安装命令”或“一个脚本命令”，不要把流程拆成多种方案。
+- OpenClaw 统一用 `npm install -g openclaw@latest` 安装。
+- Windows 固定走原生管理员 PowerShell，不引导用户安装 WSL2 / Ubuntu。
+- 安装前先检查 Git、Node、npm；缺什么先补什么。
+- `.env` 必须准备好，再配置模型和飞书。
+- 默认模型使用 `qwen/qwen3.6-plus`，备选模型使用 `deepseek/deepseek-reasoner`。
+- 不要让用户把真实密钥发到聊天里，只指导他把密钥写进本机 `.env`。
 
 ## 触发场景
 
@@ -27,57 +26,173 @@ description: 在 macOS 或 Windows 上安装和排障 OpenClaw。统一走 Node 
 - mac 上要装 OpenClaw
 - 配置 DeepSeek / Qwen / 飞书
 - `pairing required`、`gateway closed`、飞书机器人不回消息
-- Node / npm 环境没装好
+- Git / Node / npm 环境没装好
+- `.env` 缺少 Qwen、DeepSeek 或飞书配置
 
-## macOS 最佳实践
+## 1. 先检查依赖
 
-如果 `.env` 已经配好，直接运行：
+先让用户执行：
 
-```bash
-bash <skill-dir>/scripts/install-openclaw-macos.sh <env-file>
-```
-
-执行逻辑：
-
-- 如果缺 Node，先安装 Node
-- 用 npm 全局安装 OpenClaw
-- 把 `.env` 同步到 `~/.openclaw/.env`
-- 直接写入 Feishu + 模型配置
-- 安装并启动 Gateway
-- 打开 dashboard 验证
-
-## Windows 最佳实践
-
-Windows 只走原生安装，不走 WSL2 / Ubuntu。
-
-如果 `.env` 已经配好，在管理员 PowerShell 里直接运行：
+macOS：
 
 ```bash
-powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\install-openclaw-windows.ps1 -EnvFile <env-file>
+git --version
+node --version
+npm --version
 ```
 
-执行逻辑：
+Windows PowerShell：
 
-- 如果缺 Node，先用 `winget` 安装 Node
-- 用 npm 全局安装 OpenClaw
-- 把 `.env` 同步到 `%USERPROFILE%\.openclaw\.env`
-- 直接写入 Feishu + 模型配置
-- 安装并启动 Gateway
-- 打开 dashboard 验证
+```powershell
+git --version
+node --version
+npm --version
+winget --version
+```
 
-## 模型与飞书
+如果缺 Git：
 
-- 非交互配置脚本：`scripts/apply-openclaw-config.mjs`
-- 它会直接设置：
-  - 主模型：`qwen/qwen3.6-plus`
-  - 备选模型：`deepseek/deepseek-reasoner`
-  - 飞书：`websocket + defaultAccount=main + dmPolicy=pairing`
-- 如果要看最终写入的配置结构，读 `references/config-snippets.md`
-- 如果要发给中文用户的精简文案，读 `references/quickstart-zh.md`
+macOS：
 
-## 排障顺序
+```bash
+brew install git
+```
 
-无论是 macOS 还是 Windows，先按这个顺序排查：
+如果 macOS 没有 Homebrew，就让用户先执行：
+
+```bash
+xcode-select --install
+```
+
+Windows：
+
+```powershell
+winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+```
+
+如果缺 Node / npm：
+
+macOS：
+
+```bash
+brew install node@24
+brew link --overwrite --force node@24
+```
+
+Windows：
+
+```powershell
+winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+```
+
+如果 Windows 没有 `winget`，让用户手动下载并安装：
+
+- Git: https://git-scm.com/download/win
+- Node.js: https://nodejs.org/en/download
+
+安装 Git 或 Node 后，提醒用户重新打开终端 / 管理员 PowerShell，再继续下一步。
+
+## 2. 安装 OpenClaw
+
+macOS / Windows 都使用 npm：
+
+```bash
+npm install -g openclaw@latest
+openclaw --version
+```
+
+Windows 如果遇到 `openclaw.ps1` 被 PowerShell 拦截，改用：
+
+```powershell
+& "$env:APPDATA\npm\openclaw.cmd" --version
+```
+
+## 3. 准备 `.env`
+
+让用户在本机创建 OpenClaw 环境变量文件。
+
+macOS：
+
+```bash
+mkdir -p ~/.openclaw
+nano ~/.openclaw/.env
+```
+
+Windows PowerShell：
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.openclaw"
+notepad "$env:USERPROFILE\.openclaw\.env"
+```
+
+`.env` 至少包含：
+
+```env
+QWEN_API_KEY=你的QwenKey
+DEEPSEEK_API_KEY=你的DeepSeekKey
+FEISHU_APP_ID=你的飞书AppID
+FEISHU_APP_SECRET=你的飞书AppSecret
+FEISHU_BOT_NAME=OpenClaw
+FEISHU_DOMAIN=feishu
+```
+
+Qwen key 也兼容 `MODELSTUDIO_API_KEY` 或 `DASHSCOPE_API_KEY`。如果是国际版 Lark，把 `FEISHU_DOMAIN` 改成 `lark`。
+
+## 4. 配置模型
+
+默认 Qwen 3.6，备选 DeepSeek：
+
+```bash
+openclaw models set qwen/qwen3.6-plus
+openclaw models fallbacks clear
+openclaw models fallbacks add deepseek/deepseek-reasoner
+openclaw models status --plain
+```
+
+## 5. 配置飞书
+
+优先使用 OpenClaw 自带配置命令：
+
+```bash
+openclaw config set channels.feishu.enabled true
+openclaw config set channels.feishu.connectionMode '"websocket"'
+openclaw config set channels.feishu.dmPolicy '"pairing"'
+openclaw config set channels.feishu.defaultAccount '"main"'
+openclaw config set channels.feishu.accounts.main.appId '"${FEISHU_APP_ID}"'
+openclaw config set channels.feishu.accounts.main.appSecret '"${FEISHU_APP_SECRET}"'
+openclaw config set channels.feishu.accounts.main.name '"OpenClaw"'
+openclaw config validate
+```
+
+如果用户是国际版 Lark，再加：
+
+```bash
+openclaw config set channels.feishu.domain '"lark"'
+```
+
+## 6. 启动 Gateway 和 Dashboard
+
+macOS：
+
+```bash
+openclaw gateway install
+openclaw gateway start
+openclaw gateway status
+openclaw dashboard
+```
+
+Windows 管理员 PowerShell：
+
+```powershell
+openclaw gateway install
+openclaw gateway start
+openclaw gateway status
+openclaw dashboard
+```
+
+如果 Windows 提示 `schtasks` 拒绝访问，说明当前不是管理员 PowerShell，要求用户重新用管理员 PowerShell 执行。
+
+## 7. 最小排障
 
 ```bash
 openclaw gateway status
@@ -85,23 +200,18 @@ openclaw health --verbose
 openclaw dashboard --no-open
 ```
 
-- 如果安装阶段出错，先重新执行对应系统的安装脚本
-- 如果是 macOS，运行 `scripts/check-openclaw.sh`
-- 如果是 Windows，运行 `scripts/check-openclaw.ps1`
-- 如果是配置脚本报错或飞书/模型仍不可用，读 `references/troubleshooting.md`
+如果 dashboard 出现 `disconnected (1008): pairing required`，这是设备配对问题，不是 Gateway 挂了。让用户执行：
 
-## 输出要求
+```bash
+openclaw devices list
+openclaw devices approve <requestId>
+```
 
-使用这个 skill 时，回复应满足：
+## 回答要求
 
-- 默认用中文
-- 直接给下一步要执行的命令
-- 明确当前是在 macOS 还是 Windows
-- 明确问题属于安装、认证、Gateway、dashboard、pairing 还是飞书
-
-## 不要这么做
-
-- 不要默认让用户手动跑 `openclaw onboard` 向导
-- 不要一上来就让用户手改 `~/.openclaw/openclaw.json`
-- 不要要求用户把真实密钥粘贴到聊天里
-- 不要把 `1008 pairing required` 误判成“Gateway 挂了”
+- 默认用中文回答。
+- 先判断用户是 macOS 还是 Windows。
+- 每次只给当前最需要执行的一组命令。
+- 遇到缺 Git / Node / npm / `.env`，先指导补齐，不要跳到后面的模型或飞书配置。
+- 不要要求用户把真实密钥粘贴到聊天里。
+- 不要引导 Windows 用户安装 WSL2 / Ubuntu。
